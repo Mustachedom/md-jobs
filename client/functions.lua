@@ -113,6 +113,8 @@ local options = {}
 		exports['qb-target']:AddBoxZone(name, loc.loc, loc.w, loc.l, {name = name, minZ = loc.loc.z-loc.lwr,maxZ = loc.loc.z + loc.upr, debugPoly = false, heading = loc.r + 0.0}, { options = options, distance = 2.5 })
 	elseif Config.Target == 'ox' then
 		exports.ox_target:addBoxZone({coords = loc.loc, size = vec3(loc.l,loc.w,loc.lwr + loc.upr), rotation = loc.r + 0.0, options = options, debug = false})
+	elseif Config.Target == 'interact' then
+		exports.interact:AddInteraction({coords = loc.loc, distance = 2.5, interactDst = 2.5, id = name, name = name, options = options})
 	end
 end
 
@@ -128,6 +130,15 @@ function AddTargModel(model, data, num)
 		exports['qb-target']:AddTargetEntity(model, {options = options, distance = 3.5})
 	elseif Config.Target == 'ox' then
 		exports.ox_target:addLocalEntity(model, options)
+	elseif Config.Target == 'interact' then
+		exports.interact:AddLocalEntityInteraction({
+	            entity = model,
+	            name = "entity_" .. tostring(model),
+	            id = "entity_" .. tostring(model),
+	            distance = 3.5,
+	            interactDst = 2.0,
+	            options = options
+	        })
 	end
 end
 
