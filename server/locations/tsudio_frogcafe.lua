@@ -93,5 +93,17 @@ Jobs['frogperson'] = {
  
     },
     consumables = {
+        macaron_a = {anim = 'eat', label = 'Eating', add = {hunger = 15}},
+        macaron_b = {anim = 'eat', label = 'Eating', add = {hunger = 15}},
+        cake_b = {anim = 'eat', label = 'Eating', add = {hunger = 15}},
+        tiramisu_a = {anim = 'eat', label = 'Eating', add = {hunger = 15}},
+        mochi_a = {anim = 'drink', label = 'Drinking', add = {thirst = 50}},
+        drink_a = {anim = 'drink', label = 'Drinking', add = {thirst = 50}},
+        drink_b = {anim = 'drink', label = 'Drinking', add = {thirst = 50}},
+        drink_c = {anim = 'drink', label = 'Drinking', add = {thirst = 50}},
+        drink_d = {anim = 'drink', label = 'Drinking', add = {thirst = 50}},
+        coffee_a = {anim = 'drink', label = 'Drinking', add = {thirst = 50}},
+        cappuccino_a = {anim = 'drink', label = 'Drinking', add = {thirst = 50}},
+        donut_a = {anim = 'eat', label = 'Eating', add = {hunger = 15}},
     },
 }
