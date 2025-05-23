@@ -1,145 +1,333 @@
 local props = {}
-CreateThread(function()
-    local locs = lib.callback.await('md-jobs:server:getLocations', false)
-    for k, v in pairs (locs) do
-        if v.Crafter then
-            for m, d in pairs(v.Crafter) do
-                if not d.CraftData.targetLabel then d.CraftData.targetLabel = 'Craft' end
-                if not d.CraftData.menuLabel then d.CraftData.menuLabel = 'Craft' end
-                local ops = {
-                    {icon = Icons.crafter, label = d.CraftData.targetLabel, action = function() makeCrafter(d.CraftData.type, d.CraftData.menuLabel, k, m) end, canInteract = function() return hasJob(k) end},
-                }
-                if d.CraftData.prop ~= nil then
-                    local number = #props + 1
-                    lib.requestModel(d.CraftData.prop)
-                    props[#props + 1] = CreateObject(d.CraftData.prop, d.loc.x,d.loc.y,d.loc.z, false, false, false)
-                    propsSpawn(props[number], d.r + 0.0 or 180.0, ops)
-                else
-                    AddBoxZone('craft' .. k .. m, d, ops)
-                end
-            end
-        end
-        if v.Stores then
-            for m, d in pairs(v.Stores) do
-                if not d.StoreData.targetLabel then d.StoreData.targetLabel = 'Open Shop' end
-                if not d.StoreData.menuLabel then d.StoreData.menuLabel = 'Open Shop' end
-                local ops = {
-                    {icon = Icons.store, label = d.StoreData.targetLabel, action = function() makeStore(d.StoreData.type, k, d.StoreData.menuLabel, m) end, canInteract = function() return hasJob(k) end},
-                }
-                if d.StoreData.prop ~= nil then
-                    local number = #props + 1
-                    lib.requestModel(d.StoreData.prop)
-                    props[number] = CreateObject(d.StoreData.prop, d.loc.x,d.loc.y,d.loc.z, false, false, false)
-                    propsSpawn(props[number], d.r + 0.0 or 180.0, ops)
-                else
-                    AddBoxZone('store' .. k .. m, d, ops)
-                end
-            end
-        end
-        if v.Tills then
-            for m, d in pairs(v.Tills) do
-                local ops = {
-                    {icon = Icons.till, label = L.T.till, action = function() TriggerServerEvent('md-jobs:server:billPlayer', k, m) end, canInteract = function() return hasJob(k) end},
-                    {icon = Icons.till, label = L.T.managecat, action = function() manageCatering(k) end, canInteract = function() return hasJob(k) and GlobalState.Cater[k] end},
-                    {icon = Icons.till, label = L.T.boss, action = function() openBossMenu(k) end, canInteract = function() return isBoss() and hasJob(k) end},
-                    {icon = Icons.till, label = 'Toggle Duty', action = function() toggleDuty() end, canInteract = function() return hasJob(k) end},
-                }
-                if d.prop ~= nil then
-                    lib.requestModel(d.prop)
-                    local number = #props + 1
-                    props[number] = CreateObject(d.prop, d.loc.x,d.loc.y,d.loc.z, false, false, false)
-                    propsSpawn(props[number], d.r + 0.0 or 180.0, ops)
-                else
-                    AddBoxZone('till' .. k .. m, d, ops)
-                end
-            end
-        end
-        if v.stash then 
-            for m, d in pairs(v.stash) do
-                if d.label == nil then d.label = 'Open Stash' end
-                local ops = {
-                    {icon = Icons.stash, label = d.label, action = function() openStash(k .. ' stash ' .. m, d.weight, d.slot, m, k) end, canInteract = function() return hasJob(k) end}
-                }
-                if d.prop ~= nil then
-                    local number = #props + 1
-                    lib.requestModel(d.prop)
-                    props[number] = CreateObject(d.prop, d.loc.x,d.loc.y,d.loc.z, false, false, false)
-                    propsSpawn(props[number], d.r + 0.0 or 180.0, ops)
-                else
-                    AddBoxZone('stash' .. k .. m, d, ops)
-                end
-            end
-        end
-        if v.trays then 
-            for m, d in pairs(v.trays) do
-                if d.label == nil then d.label = 'Grab Items' end
-                local ops = {
-                    {icon = Icons.trays, label = d.label, action = function() openTray(k .. ' Tray ' .. m, d.weight, d.slot, m, k) end}
-                }
-                if d.prop ~= nil then
-                    lib.requestModel(d.prop)
-                    local number = #props + 1
-                    props[number] = CreateObject(d.prop, d.loc.x,d.loc.y,d.loc.z, false, false, false)
-                    propsSpawn(props[number], d.r + 0.0 or 180.0, ops)
-                else
-                    AddBoxZone('trays' .. k .. m, d, ops)
-                end
-            end
-        end
-    end
-end)
-
 local blips = {}
 local peds = {}
-AddEventHandler('onResourceStop', function(resource)
-    if resource ~= GetCurrentResourceName() then return end
-    for k, v in pairs(props) do DeleteEntity(v) end
-    for k, v in pairs (blips) do RemoveBlip(v) end
-    for k, v in pairs (peds) do DeleteEntity(v) end
-    blips = {}
-    peds = {}
-end)
 
-local function spawnPeds()
-    local peds = lib.callback.await('md-jobs:server:getPeds', false)
-    for k, v in pairs(peds) do
-        lib.requestModel(v.model, 30000)
-        peds[k] = CreatePed(0, v.model, v.loc.x, v.loc.y, v.loc.z, v.loc.w, false, false)
-        FreezeEntityPosition(peds[k], true)
-        SetEntityInvincible(peds[k], true)
-        SetBlockingOfNonTemporaryEvents(peds[k], true)
-        AddTargModel(peds[k], {
-            {icon = Icons.shop, label =  L.T.shop, action = function() openClosedShop(v.job ,v.num) end, canInteract = function() return canOpenClosed(v.job) end,},
-            {icon = Icons.shop, label =  L.T.manage, action = function() manageClosed(v.job, v.num) end, canInteract = function() return hasJob(v.job)end,},
-            {icon = Icons.shop, label =  "Adjust Prices", action = function() lib.callback.await('md-jobs:server:adjustPrices', false, v.job, v.num) end, canInteract = function() return isBoss() and hasJob(v.job) end,}
+--- Spawn peds
+--- @return nil
+local function createZones()
+    local closedShops = lib.callback.await('md-jobs:server:getClosedShops', false)
+    for _, shopObj in pairs(closedShops) do
+        local shopConfig = shopObj.config
+        local shopOptions = {
+            {
+                icon = Icons.shop,
+                label = L.T.shop,
+                action = function() OpenClosedShop(shopConfig.job, shopConfig.num) end,
+                canInteract = function()
+                    return CanOpenClosed(shopConfig.job)
+                end
+            },
+            {
+                icon = Icons.shop,
+                label = L.T.manage,
+                action = function() ManageClosed(shopConfig.job, shopConfig.num) end,
+                canInteract = function()
+                    return HasJob(shopConfig.job)
+                end
+            },
+            {
+                icon = Icons.shop,
+                label = "Adjust Prices",
+                action = function() AdjustPrices(shopConfig.job, shopConfig.num) end,
+                canInteract = function()
+                    return IsBoss() and HasJob(shopConfig.job)
+                end
+            }
+        }
+        lib.zones.box({
+            coords = vector3(shopConfig.loc.x, shopConfig.loc.y, shopConfig.loc.z),
+            size = vector3(30, 30, 3),
+            rotation = shopConfig.loc.w or 0,
+            debug = Config.Debug,
+            onEnter = function()
+                if shopObj.type == "ped" then
+                    local ped = nil
+                    if Config.UseClientPeds then
+                        local model = shopConfig.model
+                        lib.requestModel(model, 30000)
+                        local timeout = 5000
+                        local startTime = GetGameTimer()
+                        ped = CreatePed(4, model, shopConfig.loc.x, shopConfig.loc.y, shopConfig.loc.z, shopConfig.loc.w,
+                            false,
+                            true)
+                        while not DoesEntityExist(ped) do
+                            Wait(100)
+                            if GetGameTimer() - startTime > timeout then
+                                if Config.Debug then print("[ERROR] - Timeout: Ped creation failed.") end
+                                return
+                            end
+                        end
+                        SetEntityHeading(ped, shopConfig.loc.w)
+                        FreezeEntityPosition(ped, true)
+                        SetModelAsNoLongerNeeded(model)
+                        peds[shopConfig.num] = ped
+                    else
+                        local netId = shopConfig.model -- If server spawned shopConfig.model is netId
+                        ped = NetToPed(netId)
+                    end
+                    if not ped or not DoesEntityExist(ped) then
+                        print("[ERROR] - Failed to get ped for interaction")
+                        return
+                    end
+                    SetEntityInvincible(ped, true)
+                    SetBlockingOfNonTemporaryEvents(ped, true)
+
+                    AddTargModel(ped, shopOptions)
+                elseif shopObj.type == "target" then
+                    AddTargSphere(shopConfig.job .. ' ' .. shopConfig.num,
+                        vector3(shopConfig.loc.x, shopConfig.loc.y, shopConfig.loc.z), shopOptions)
+                end
+            end,
+            onExit = function()
+                if shopObj.type == "ped" then
+                    if Config.UseClientPeds then
+                        if DoesEntityExist(peds[shopConfig.num]) then
+                            DeleteEntity(peds[shopConfig.num])
+                            peds[shopConfig.num] = nil
+                        end
+                    else
+                        local netId = shopConfig.model -- If server spawned shopConfig.model is netId
+                        local ped = NetToPed(netId)
+                        if not ped or not DoesEntityExist(ped) then
+                            print("[ERROR] - Failed to get ped for removal")
+                            return
+                        end
+                        RemoveTargModel(ped, shopOptions)
+                    end
+                elseif shopObj.type == "target" then
+                    RemoveTargSphere(shopConfig.job .. ' ' .. shopConfig.num)
+                end
+            end,
         })
     end
 end
 
+--- Create blips
+--- @return nil
 local function spawnBlips()
-    local blipLocs = lib.callback.await('md-jobs:server:getBlips', false)
-    for k, v in pairs(blipLocs) do
-        blips[k] = AddBlipForCoord(v.loc.x, v.loc.y, v.loc.z)
-        SetBlipSprite(blips[k], v.sprite or 52)
-        SetBlipDisplay(blips[k], 4)
-        SetBlipScale(blips[k], v.scale or 0.8)
-        SetBlipColour(blips[k], v.color or 2)
-        SetBlipAsShortRange(blips[k], true)
+    local blipConfigs = lib.callback.await('md-jobs:server:getBlips', false)
+    for blipIndex, blipInfo in pairs(blipConfigs) do
+        blips[blipIndex] = AddBlipForCoord(blipInfo.loc.x, blipInfo.loc.y, blipInfo.loc.z)
+        SetBlipSprite(blips[blipIndex], blipInfo.sprite or 52)
+        SetBlipDisplay(blips[blipIndex], 4)
+        SetBlipScale(blips[blipIndex], blipInfo.scale or 0.8)
+        SetBlipColour(blips[blipIndex], blipInfo.color or 2)
+        SetBlipAsShortRange(blips[blipIndex], true)
         BeginTextCommandSetBlipName("STRING")
-        AddTextComponentString(v.label or 'Lazy Ass')
-        EndTextCommandSetBlipName(blips[k])
+        AddTextComponentString(blipInfo.label or 'Lazy Ass')
+        EndTextCommandSetBlipName(blips[blipIndex])
     end
 end
 
+------------------------
+---- Event Handlers ----
+------------------------
+
 AddEventHandler('QBCore:Client:OnPlayerLoaded', function()
     spawnBlips()
-    spawnPeds()
+    createZones()
 end)
 
-AddEventHandler('onResourceStart', function(resourceName)
-    if (GetCurrentResourceName() ~= resourceName) then
-      return
-    end
+AddEventHandler('onClientResourceStart', function(resourceName)
+    if GetCurrentResourceName() ~= resourceName then return end
     spawnBlips()
-    spawnPeds()
+    createZones()
+end)
+
+AddEventHandler('onClientResourceStop', function(resource)
+    if resource ~= GetCurrentResourceName() then return end
+
+    for _, prop in pairs(props) do
+        if DoesEntityExist(prop) then
+            DeleteEntity(prop)
+        end
+    end
+
+    if Config.UseClientPeds then
+        for _, ped in pairs(peds) do
+            if DoesEntityExist(ped) then
+                DeleteEntity(ped)
+            end
+        end
+    end
+
+    for _, blip in pairs(blips) do RemoveBlip(blip) end
+    props = {}
+    blips = {}
+    peds = {}
+end)
+
+-----------------
+---- Threads ----
+-----------------
+
+CreateThread(function()
+    local jobLocations = lib.callback.await('md-jobs:server:getLocations', false)
+    for jobName, locationData in pairs(jobLocations) do
+        local jobLabel = jobName
+        if Config.Framework == 'qbx' then
+            jobLabel = QBOX:GetJob(jobName).label
+        end
+        if locationData.Crafter then
+            for crafterIndex, crafterEntry in pairs(locationData.Crafter) do
+                local craftData = crafterEntry.CraftData
+                craftData.targetLabel = craftData.targetLabel or 'Craft'
+                craftData.menuLabel = craftData.menuLabel or 'Craft'
+                local interactionOptions = {
+                    {
+                        icon = Icons.crafter,
+                        label = craftData.targetLabel,
+                        action = function()
+                            MakeCrafter(craftData.type, craftData.menuLabel, jobName, crafterIndex)
+                        end,
+                        canInteract = function()
+                            return HasJob(jobName)
+                        end
+                    }
+                }
+                if craftData.prop then
+                    local propIndex = #props + 1
+                    lib.requestModel(craftData.prop)
+                    props[propIndex] = CreateObject(craftData.prop, crafterEntry.loc.x, crafterEntry.loc.y,
+                        crafterEntry.loc.z, false, false, false)
+                    PropsSpawn(props[propIndex], craftData.r or 180.0, interactionOptions)
+                    SetModelAsNoLongerNeeded(craftData.prop)
+                else
+                    AddBoxZone('craft' .. jobName .. crafterIndex, crafterEntry, interactionOptions)
+                end
+            end
+        end
+        if locationData.Stores then
+            for storeIndex, storeEntry in pairs(locationData.Stores) do
+                local storeData = storeEntry.StoreData
+                storeData.targetLabel = storeData.targetLabel or 'Open Shop'
+                storeData.menuLabel = storeData.menuLabel or 'Open Shop'
+                local interactionOptions = {
+                    {
+                        icon = Icons.store,
+                        label = storeData.targetLabel,
+                        action = function()
+                            MakeStore(storeData.type, jobName, storeData.menuLabel, storeIndex)
+                        end,
+                        canInteract = function()
+                            return HasJob(jobName)
+                        end
+                    }
+                }
+                if storeData.prop then
+                    local propIndex = #props + 1
+                    lib.requestModel(storeData.prop)
+                    props[propIndex] = CreateObject(storeData.prop, storeEntry.loc.x, storeEntry.loc.y, storeEntry.loc.z,
+                        false, false, false)
+                    PropsSpawn(props[propIndex], storeData.r or 180.0, interactionOptions)
+                    SetModelAsNoLongerNeeded(storeData.prop)
+                else
+                    AddBoxZone('store' .. jobName .. storeIndex, storeEntry, interactionOptions)
+                end
+            end
+        end
+        if locationData.Tills then
+            for tillIndex, tillConfig in pairs(locationData.Tills) do
+                local interactionOptions = {
+                    {
+                        icon = Icons.till,
+                        label = L.T.till,
+                        action = function()
+                            TriggerServerEvent('md-jobs:server:billPlayer', jobName, tillIndex)
+                        end,
+                        canInteract = function()
+                            return HasJob(jobName)
+                        end
+                    },
+                    {
+                        icon = Icons.till,
+                        label = L.T.managecat,
+                        action = function() ManageCatering(jobName) end,
+                        canInteract = function()
+                            return HasJob(jobName) and GlobalState.Cater[jobName]
+                        end
+                    },
+                    {
+                        icon = Icons.till,
+                        label = L.T.boss,
+                        action = function() OpenBossMenu(jobName) end,
+                        canInteract = function()
+                            return IsBoss() and HasJob(jobName)
+                        end
+                    },
+                    {
+                        icon = Icons.till,
+                        label = 'Toggle Duty',
+                        action = function() ToggleDuty() end,
+                        canInteract = function()
+                            return HasJob(jobName)
+                        end
+                    }
+                }
+                if tillConfig.prop then
+                    lib.requestModel(tillConfig.prop)
+                    local propIndex = #props + 1
+                    props[propIndex] = CreateObject(tillConfig.prop, tillConfig.loc.x, tillConfig.loc.y, tillConfig.loc
+                        .z, false, false, false)
+                    PropsSpawn(props[propIndex], tillConfig.r or 180.0, interactionOptions)
+                    SetModelAsNoLongerNeeded(tillConfig.prop)
+                else
+                    AddBoxZone('till' .. jobName .. tillIndex, tillConfig, interactionOptions)
+                end
+            end
+        end
+        if locationData.stash then
+            for stashIndex, stashEntry in pairs(locationData.stash) do
+                stashEntry.label = stashEntry.label or 'Open Stash'
+                local interactionOptions = {
+                    {
+                        icon = Icons.stash,
+                        label = stashEntry.label,
+                        action = function()
+                            OpenStash(jobLabel .. ' stash ' .. stashIndex, stashEntry.weight, stashEntry.slot, stashIndex,
+                                jobName)
+                        end,
+                        canInteract = function()
+                            return HasJob(jobName)
+                        end
+                    }
+                }
+                if stashEntry.prop then
+                    lib.requestModel(stashEntry.prop)
+                    local propIndex = #props + 1
+                    props[propIndex] = CreateObject(stashEntry.prop, stashEntry.loc.x, stashEntry.loc.y, stashEntry.loc
+                        .z, false, false, false)
+                    PropsSpawn(props[propIndex], stashEntry.r or 180.0, interactionOptions)
+                    SetModelAsNoLongerNeeded(stashEntry.prop)
+                else
+                    AddBoxZone('stash' .. jobName .. stashIndex, stashEntry, interactionOptions)
+                end
+            end
+        end
+        if locationData.trays then
+            for trayIndex, trayConfig in pairs(locationData.trays) do
+                trayConfig.label = trayConfig.label or 'Grab Items'
+                local interactionOptions = {
+                    {
+                        icon = Icons.trays,
+                        label = trayConfig.label,
+                        action = function()
+                            OpenTray(jobLabel .. ' Tray ' .. trayIndex, trayConfig.weight, trayConfig.slot, trayIndex,
+                                jobName)
+                        end
+                    }
+                }
+                if trayConfig.prop then
+                    lib.requestModel(trayConfig.prop)
+                    local propIndex = #props + 1
+                    props[propIndex] = CreateObject(trayConfig.prop, trayConfig.loc.x, trayConfig.loc.y, trayConfig.loc
+                        .z, false, false, false)
+                    PropsSpawn(props[propIndex], trayConfig.r or 180.0, interactionOptions)
+                    SetModelAsNoLongerNeeded(trayConfig.prop)
+                else
+                    AddBoxZone('trays' .. jobName .. trayIndex, trayConfig, interactionOptions)
+                end
+            end
+        end
+    end
 end)

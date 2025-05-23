@@ -3,7 +3,8 @@
         "lib",
         "progressbar",
         "MySQL",
-        "getPlayer"
+        "getPlayer",
+        "QBX"
     ],
     "Lua.diagnostics.disable": [
         "lowercase-global"

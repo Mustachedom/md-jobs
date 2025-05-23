@@ -1,100 +1,115 @@
-
 Jobs = Jobs or {}
 
---debug jobs
-for k, v in pairs (Jobs) do
+-- Initialize jobs
+for jobName in pairs(Jobs) do
     if Config.Framework == 'qb' then
-        if not QBCore.Shared.Jobs[k] then 
-            print('MD-Jobs: Job ' .. k .. ' does not exist in qb-core jobs.lua')
+        if not QBCore.Shared.Jobs[jobName] then
+            print('MD-Jobs: Job ' .. jobName .. ' does not exist in qb-core jobs.lua')
             print('Removing job from table')
-            Jobs[k] = nil
+            Jobs[jobName] = nil
         end
     elseif Config.Framework == 'qbx' then
-        local jobs = QBOX:GetJobs()
-        if not jobs[k] then 
-            print('MD-Jobs: Job ' .. k .. ' does not exist in qbx-core jobs.lua')
+        local qbxJobs = QBOX:GetJobs()
+        if not qbxJobs[jobName] then
+            print('MD-Jobs: Job ' .. jobName .. ' does not exist in qbx-core jobs.lua')
             print('Removing job from table')
-            Jobs[k] = nil
+            Jobs[jobName] = nil
         end
     elseif Config.Framework == 'esx' then
-        if not ESX.GetJobs()[k] then 
-            print('MD-Jobs: Job ' .. k .. ' does not exist in es_extended jobs.lua')
+        if not ESX.GetJobs()[jobName] then
+            print('MD-Jobs: Job ' .. jobName .. ' does not exist in es_extended jobs.lua')
             print('Removing job from table')
-            Jobs[k] = nil
+            Jobs[jobName] = nil
         end
     end
-
 end
 
-lib.callback.register('md-jobs:server:getLocations', function(source)
-    local data = {}
-    for k,v in pairs (Jobs) do
-        data[k] = v.locations
+-------------------------
+---- Local Functions ----
+-------------------------
+
+--- Get location data
+--- @param job string the job name
+--- @param event string the event name
+--- @param index number the location index
+--- @return table - the location data
+local function getLocData(job, event, index)
+    return Jobs[job].locations[event][index]
+end
+
+--- Get location coordinates for OX shops
+--- @param job string the job name
+--- @return table - list of location vectors
+local function getLocsOx(job)
+    local coords = {}
+    for _, storeEntry in pairs(Jobs[job].locations.Stores) do
+        if storeEntry.job == job then
+            table.insert(coords, storeEntry.loc)
+        end
     end
-    return data
-end)
-
-function getlocData(job, event,num)
-    return Jobs[job]['locations'][event][num]
+    return coords
 end
 
+--- Register OX stashes for trays and stash locations
+--- @return nil
 local function oxPrep()
-    if GetResourceState('ox_inventory') == 'started' then
-        for m, d in pairs (Jobs) do 
-            if Jobs[m].locations.trays then 
-                for k, v in pairs (Jobs[m].locations.trays) do
-                    exports.ox_inventory:RegisterStash(m .. ' Tray '.. k, m .. ' Tray '.. k, v.slots, v.weight)
-                end
-            end
-            if Jobs[m].locations.stash then 
-                for k, v in pairs (Jobs[m].locations.stash) do
-                    exports.ox_inventory:RegisterStash(m .. ' stash '.. k, m .. ' stash '.. k, v.slots, v.weight)
-                end
-            end
+    if GetResourceState('ox_inventory') ~= 'started' then
+        return
+    end
+    for jobName, jobConfig in pairs(Jobs) do
+        local jobLabel = jobName
+        if Config.Framework == 'qbx' then
+            jobLabel = QBOX:GetJob(jobName).label
+        end
+        local trayLocations = jobConfig.locations.trays or {}
+        for trayIndex, trayConfig in pairs(trayLocations) do
+            local stashName = jobLabel .. ' Tray ' .. trayIndex
+            exports.ox_inventory:RegisterStash(
+                stashName,
+                stashName,
+                trayConfig.slots,
+                trayConfig.weight
+            )
+        end
+        local stashLocations = jobConfig.locations.stash or {}
+        for stashIndex, stashConfig in pairs(stashLocations) do
+            local stashName = jobLabel .. ' stash ' .. stashIndex
+            exports.ox_inventory:RegisterStash(
+                stashName,
+                stashName,
+                stashConfig.slots,
+                stashConfig.weight
+            )
         end
     end
 end
 oxPrep()
 
-function getLocsOx(job, shop)
-    local loc = {}
-    for k, v in pairs (Jobs[job]['locations']['Stores']) do
-        if v.job == job then
-            table.insert(loc, v.loc)
+--- Check distance from crafting stations
+--- @param source number the player source
+--- @param job string the job name
+--- @param craftType string the craft location type
+--- @return boolean - true if within 5.0 units, false otherwise
+local function checkCraftDist(source, job, craftType)
+    local candidateCoords = {}
+    for _, stationEntry in pairs(Jobs[job].locations.Crafter) do
+        if stationEntry.job == job and stationEntry.CraftData.type == craftType then
+            table.insert(candidateCoords, stationEntry.loc)
         end
     end
-    return loc
-end
-
---- start crafting stuff
-lib.callback.register('md-jobs:server:getRecipes', function(source, job, loc)
-    local Player = getPlayer(source)
-    local Job = getJobName(source)
-    if job ~= Job then return false end
-    if Jobs[job]['craftingStations'][loc] then
-        return Jobs[job]['craftingStations'][loc]
-    end
-    return false
-end)
-
-local function checkCraftDist(source, job, loc)
-    local locs = {}
-    for k, v in pairs (Jobs[job]['locations']['Crafter']) do
-        if v.job == job then
-            if v.CraftData.type == loc then
-                table.insert(locs, v.loc)
-            end
+    local minDistance = 100.0
+    local playerPed   = GetPlayerPed(source)
+    local playerPos   = GetEntityCoords(playerPed)
+    for _, coord in ipairs(candidateCoords) do
+        local dist = #(playerPos - vector3(coord.x, coord.y, coord.z))
+        if dist < minDistance then
+            minDistance = dist
+        end
+        if minDistance <= 5.0 then
+            break
         end
     end
-    local low = 100.0
-    for k, v in pairs (locs) do
-        local dist = #(GetEntityCoords(GetPlayerPed(source)) - vector3(v.x, v.y, v.z))
-        if dist < low then
-            low = dist
-        end
-        if low <= 5.0 then break end
-    end
-    if low < 5.0 then
+    if minDistance < 5.0 then
         return true
     else
         Notifys(source, L.T.toofar, 'error')
@@ -102,153 +117,301 @@ local function checkCraftDist(source, job, loc)
     end
 end
 
-lib.callback.register('md-jobs:server:canCraft', function(source, job, loc, num, locs)
-    local Job = getJobName(source)
-    if job ~= Job then return false end
-    if not checkCraftDist(source, job, loc) then return end
-    local need, have = 0, 0
-    for k, v in pairs (Jobs[job]['craftingStations'][loc][num].give) do
-        if k == nil then break end
-        local needs = hasItem(source, k, v)
-        if needs then
-            have = have + 1
-        end
-        need = need + 1
-    end
-    if need == have then
-        for k, v in pairs(Jobs[job]['craftingStations'][loc][num].take) do
-            AddItem(source, k, v)
-        end
-        for k, v in pairs(Jobs[job]['craftingStations'][loc][num].give) do
-            RemoveItem(source, k, v)
+--- Check distance from shop locations
+--- @param source number the player source
+--- @param job string the job name
+--- @param storeType string the store location type
+--- @return boolean - true if within 5.0 units, false otherwise
+local function checkDistShops(source, job, storeType)
+    local candidateCoords = {}
+    for _, storeEntry in pairs(Jobs[job].locations.Stores) do
+        if storeEntry.job == job and storeEntry.StoreData.type == storeType then
+            table.insert(candidateCoords, storeEntry.loc)
         end
     end
-    Log('Crafted: ' .. job .. ' Name:' .. getName(source), 'crafting')
+    local minDistance = 100.0
+    local playerPed   = GetPlayerPed(source)
+    local playerPos   = GetEntityCoords(playerPed)
+    for _, coord in ipairs(candidateCoords) do
+        local dist = #(playerPos - vector3(coord.x, coord.y, coord.z))
+        if dist < minDistance then
+            minDistance = dist
+        end
+    end
+    if minDistance < 5.0 then
+        return true
+    else
+        Notifys(source, L.T.toofar, 'error')
+        return false
+    end
+end
+
+--- Get the player's source ID from a player object
+--- @param Player table the player object
+--- @return number - the player source ID
+local function getSRC(Player)
+    if Config.Framework == 'esx' then
+        return Player.source
+    else
+        return Player.PlayerData.source
+    end
+end
+
+--- Get the player object by citizen ID
+--- @param cid string the citizen ID
+--- @return table - the player object
+local function getPlayerByCid(cid)
+    if Config.Framework == 'qb' then
+        return QBCore.Functions.GetPlayerByCitizenId(cid)
+    elseif Config.Framework == 'qbx' then
+        return QBOX:GetPlayerByCitizenId(cid)
+    elseif Config.Framework == 'esx' then
+        return ESX.GetPlayerFromIdentifier(cid)
+    end
+    return {}
+end
+
+--- Remove money from a player
+--- @param source number the player source
+--- @param amount number the amount to remove
+--- @param accountType string the account type ('cash' or 'bank')
+--- @return boolean - true if successful, false otherwise
+local function removeMoney(source, amount, accountType)
+    local Player = GetPlayer(source)
+    if not Player then
+        return false
+    end
+    if Config.Framework == 'qb' then
+        if Player.Functions.RemoveMoney(accountType, amount) then
+            return true
+        else
+            Notifys(source, L.Error.too_poor, 'error')
+            return false
+        end
+    elseif Config.Framework == 'qbx' then
+        if QBOX:RemoveMoney(source, accountType, amount) then
+            return true
+        else
+            Notifys(source, L.Error.too_poor, 'error')
+            return false
+        end
+    elseif Config.Framework == 'esx' then
+        if accountType == 'bank' then
+            if Player.getAccount('bank').money >= amount then
+                Player.removeAccountMoney('bank', amount)
+                return true
+            end
+        else
+            if Player.getMoney() >= amount then
+                Player.removeMoney(amount)
+                return true
+            end
+        end
+        Notifys(source, L.Error.too_poor, 'error')
+        return false
+    end
+    return false
+end
+
+--- Dispense commission and salary to a player
+--- @param source number the player source
+--- @param amount number the total earned amount
+--- @param commissionRate number|nil the commission percentage (0-1), or nil for no commission
+--- @return nil
+local function dispenseCommission(source, amount, commissionRate)
+    if commissionRate == nil then
+        AddJobMoney(GetJobName(source), amount)
+        return
+    end
+    local commissionAmt = math.floor(amount * commissionRate)
+    local salaryAmt     = amount - commissionAmt
+    AddMoney(source, commissionAmt)
+    Notifys(source, Format(L.cater.commission, commissionAmt), 'success')
+    AddJobMoney(GetJobName(source), salaryAmt)
+end
+
+------------------------
+---- Event Handlers ----
+------------------------
+
+RegisterNetEvent('md-jobs:server:billPlayer', function(job, tillIndex)
+    local src = source
+    if not src then return end
+    local tillData  = getLocData(job, 'Tills', tillIndex)
+    if job ~= tillData.job then
+        return
+    end
+    if not CheckLoc(src, job, 'Tills', tillIndex) then
+        return
+    end
+    if GetJobName(src) ~= tillData.job then
+        return
+    end
+    local nearbyPlayers = GetNear(src)
+    local chargeInfo    = lib.callback.await('md-jobs:client:chargePerson', src, nearbyPlayers)
+    if not chargeInfo then
+        return
+    end
+    local billedPlayerObj = getPlayerByCid(chargeInfo.cid)
+    local billedSrc       = getSRC(billedPlayerObj)
+    local acceptedCharge  = lib.callback.await('md-jobs:client:acceptCharge', billedSrc, chargeInfo.amount)
+    if not acceptedCharge then
+        Notifys(src, GetName(src) .. ' Refused To Pay', 'error')
+        return
+    end
+    if BillPlayer(billedSrc, acceptedCharge.type, chargeInfo.amount) then
+        Notifys(
+            src,
+            Format(L.billing.billed, chargeInfo.amount, GetName(billedSrc)),
+            'success'
+        )
+        Notifys(
+            billedSrc,
+            Format(L.billing.paid, chargeInfo.amount, GetName(src)),
+            'success'
+        )
+        dispenseCommission(src, chargeInfo.amount, tillData.commission)
+        Log(
+            'Charged: ' .. job ..
+            ' Name:' .. GetName(src) ..
+            ' Billed: ' .. GetName(billedSrc) ..
+            '$' .. chargeInfo.amount,
+            'billing'
+        )
+    else
+        Notifys(src, Format(L.billing.too_poor, GetName(billedSrc)), 'error')
+    end
+end)
+
+----------------------------
+---- Callback Functions ----
+----------------------------
+
+lib.callback.register('md-jobs:server:getLocations', function()
+    local allLocations = {}
+    for jobName, jobConfig in pairs(Jobs) do
+        allLocations[jobName] = jobConfig.locations
+    end
+    return allLocations
+end)
+
+lib.callback.register('md-jobs:server:getRecipes', function(source, job, station)
+    local playerJob = GetJobName(source)
+    if job ~= playerJob then
+        return false
+    end
+    return Jobs[job].craftingStations[station] or false
+end)
+
+lib.callback.register('md-jobs:server:canCraft', function(source, job, station, stationIndex)
+    local playerJob = GetJobName(source)
+    if job ~= playerJob or not checkCraftDist(source, job, station) then
+        return false
+    end
+    local recipe = Jobs[job].craftingStations[station][stationIndex]
+    local requiredCount, satisfiedCount = 0, 0
+    for itemName, requiredQty in pairs(recipe.give) do
+        requiredCount = requiredCount + 1
+        if HasItem(source, itemName, requiredQty) then
+            satisfiedCount = satisfiedCount + 1
+        end
+    end
+    if requiredCount == satisfiedCount then
+        for itemName, qty in pairs(recipe.take) do
+            AddItem(source, itemName, qty)
+        end
+        for itemName, qty in pairs(recipe.give) do
+            RemoveItem(source, itemName, qty)
+        end
+    end
+    Log('Crafted: ' .. job .. ' Name:' .. GetName(source), 'crafting')
     return true
 end)
 
-lib.callback.register('md-jobs:server:getCraftingMax', function(source, job, loc, item, num)
-    local Job = getJobName(source)
-    if job ~= Job then return false end
-    local tbl = Jobs[job]['craftingStations'][loc][num]
-    if next(tbl.give) == nil then
+lib.callback.register('md-jobs:server:getCraftingMax', function(source, job, station, _, stationIndex)
+    local playerJob = GetJobName(source)
+    if job ~= playerJob then
+        return false
+    end
+    local recipe = Jobs[job].craftingStations[station][stationIndex]
+    if next(recipe.give) == nil then
         return Config.MultiCraftDefault
     end
-    local lowestValue = 999999999
-    for k, v in pairs(tbl.give) do
-        local has = getItemCount(source, k) or 0
-        local value = math.floor(has / v)
-
-        if value < lowestValue then
-            lowestValue = value
+    local maxPossible = math.huge
+    for itemName, requiredQty in pairs(recipe.give) do
+        local ownedQty = GetItemCount(source, itemName)
+        local possible = math.floor(ownedQty / requiredQty)
+        if possible < maxPossible then
+            maxPossible = possible
         end
     end
-    if tbl.max == nil then tbl.max = Config.MultiCraftDefault end
-    if tbl.max < lowestValue then
-        lowestValue = tbl.max
-    end
-    return lowestValue
+    local limit = recipe.max or Config.MultiCraftDefault
+    return math.min(maxPossible, limit)
 end)
---- end crafting stuff
 
---- start shop stuff
-local function checkDistShops(source,job, loc)
-    local locs = {}
-    for k, v in pairs (Jobs[job]['locations']['Stores']) do
-        if v.job == job then
-            if v.StoreData.type == loc then 
-                table.insert(locs, v.loc)
-            end
-        end
-    end
-    local low = 100.0
-    for k, v in pairs (locs) do
-        local dist = #(GetEntityCoords(GetPlayerPed(source)) - vector3(v.x, v.y, v.z))
-        if dist < low then
-            low = dist
-        end
-    end
-    if low < 5.0 then
-        return true
-    else
-        Notifys(source, L.T.toofar, 'error')
+lib.callback.register('md-jobs:server:getShops', function(source, job, storeType)
+    local playerJob = GetJobName(source)
+    if job ~= playerJob or not checkDistShops(source, job, storeType) then
         return false
     end
-end
-
-lib.callback.register('md-jobs:server:getShops', function(source, job, loc)
-    local Job = getJobName(source)
-    if not checkDistShops(source, job, loc) then return false end 
-    if job ~= Job then return false end
     if Config.UseShops then
-        if Config.Inv == 'qb' then 
-            exports['qb-inventory']:CreateShop({name =  job .. ' ' .. loc,label = loc,slots = #Jobs[job]['shops'][loc],items = Jobs[job]['shops'][loc]})
-            exports['qb-inventory']:OpenShop(source, job .. ' ' .. loc)
+        if Config.Inv == 'qb' then
+            local shopName = job .. ' ' .. storeType
+            exports['qb-inventory']:CreateShop({
+                name  = shopName,
+                label = storeType,
+                slots = #Jobs[job].shops[storeType],
+                items = Jobs[job].shops[storeType],
+            })
+            exports['qb-inventory']:OpenShop(source, shopName)
             return true
         elseif Config.Inv == 'ox' then
-            exports.ox_inventory:RegisterShop(job .. ' ' .. loc, {name = job .. ' ' .. loc,inventory = Jobs[job]['shops'][loc],locations = getLocsOx(job, loc)})
-            return job .. ' ' .. loc, loc
+            local shopKey = job .. ' ' .. storeType
+            exports.ox_inventory:RegisterShop(shopKey, {
+                name      = shopKey,
+                inventory = Jobs[job].shops[storeType],
+                locations = getLocsOx(job),
+            })
+            return shopKey, storeType
         end
     end
-    if Jobs[job]['shops'][loc] ~= nil then
-        return Jobs[job]['shops'][loc]
-    else
-        return false
-    end
+    return Jobs[job].shops[storeType] or false
 end)
 
-lib.callback.register('md-jobs:server:purchaseShops', function(source, job, loc, item, amount, location)
-    if not checkDistShops(source,job, loc) then return end
-    local price = nil
-    if not getJobName(source) == job then return end
-    for i = 1, #Jobs[job]['shops'][loc] do
-        if Jobs[job]['shops'][loc][i].name == item then
-            price = Jobs[job]['shops'][loc][i].price * amount
+lib.callback.register('md-jobs:server:purchaseShops', function(source, job, storeType, itemName, amount)
+    if not checkDistShops(source, job, storeType) then
+        return
+    end
+    if GetJobName(source) ~= job then
+        return
+    end
+    local totalPrice
+    for _, shopItem in ipairs(Jobs[job].shops[storeType]) do
+        if shopItem.name == itemName then
+            totalPrice = shopItem.price * amount
+            break
         end
     end
-    if price == nil then return end
-    if removeMoney(source, price, 'cash') or removeMoney(source, price, 'cash')  then
-        Log('Purchased: ' .. job .. ' Name:' .. getName(source), 'purchasing')
-        AddItem(source, item, amount)
+    if not totalPrice then
+        return
+    end
+
+    if removeMoney(source, totalPrice, 'cash') then
+        Log('Purchased: ' .. job .. ' Name:' .. GetName(source), 'purchasing')
+        AddItem(source, itemName, amount)
         return true
     else
         return false
     end
 end)
 
-lib.callback.register('md-jobs:server:getBlips', function(source)
-    local data = {}
-    for k, v in pairs (Jobs) do
-        if v.Blip ~= nil then
-            for m, d in pairs (v.Blip) do
-                table.insert(data, d)
-            end
+lib.callback.register('md-jobs:server:getBlips', function()
+    local blipList = {}
+    for _, jobConfig in pairs(Jobs) do
+        local blips = jobConfig.Blip or {}
+        for _, blipData in pairs(blips) do
+            table.insert(blipList, blipData)
         end
     end
-    return data
-end)
-
-
-RegisterNetEvent('md-jobs:server:billPlayer', function(job, num)
-    local src = source
-    local data = getlocData(job, 'Tills', num)
-    if job ~= data.job then return end
-    if not checkLoc(source,job, 'Tills', num) then return end
-    if getJobName(src) == data.job then
-        local peeps = getNear(src)
-        local person = lib.callback.await('md-jobs:client:chargePerson', source, peeps)
-        if person == nil then return end
-        local billed = getPlayerByCid(person.cid)
-        local bsrc = getSRC(billed)
-        local accept = lib.callback.await('md-jobs:client:acceptCharge', bsrc, person.amount)
-        if not accept then Notifys(src, getName(src).. ' Refused To Pay', 'error') return end
-        if billPlayer(bsrc, accept.type, person.amount) then
-            Notifys(src, s(L.billing.billed, person.amount, getName(bsrc)), 'success')
-            Notifys(bsrc,  s(L.billing.paid, person.amount, getName(src)), 'success')
-            dispenseCommission(src, person.amount, data.commission)
-            Log('Charged: ' .. job .. ' Name:' .. getName(src) .. ' Billed: ' .. getName(bsrc) .. '$' .. person.amount, 'billing')
-        else
-            Notifys(src, s(L.billing.too_poor, getName(bsrc)),'error')
-        end
-    end
+    return blipList
 end)

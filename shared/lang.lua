@@ -71,8 +71,9 @@ L.cater = {
         deliver = 'Deliver Catering Order',
         deliver_desc = 'Deliver The Catering Order To The Customer',
         too_late = 'You Are Too Late To Deliver The Catering Order',
-        complete = 'You Have Delivered The Catering Order',
-        van = 'The Van Is Outside! Go To The Marked Location',
+        delivered = 'You Delivered The Order, Return The Company Vehicle',
+        complete = 'You Have Completed The Catering Order',
+        van = 'The Company Vehicle Is Outside! Go To The Marked Location',
         cancel = 'Cancel Catering Order',
         cancel_desc = 'Cancel The Catering Order',
         cancelled = 'You Have Cancelled The Catering Order',
@@ -81,12 +82,14 @@ L.cater = {
         added = 'You Have Added Yourself To The Catering Order',
         history = 'View Catering History',
         history_desc = 'View The History Of Catering Orders',
+        history_none = 'No History',
+        history_none_desc = 'You Have No Catering History. Complete A Catering Order To Get History',
         hd = 'Customer Name: %s Total: ' .. L.cur .. '%s',
         hd_desc = 'Customer Details: %s %s Customer Name: %s %s Location: %s %s Total Amount Of Products: %s %s Total Price: ' .. L.cur .. '%s  %s %s Itemized List: %s %s %s Employees On Order: %s',
     },
     commission = 'You Have Recieved A Commission Of ' .. L.cur .. '%s For Delivering The Catering Order',
     already = 'Your Job Already Has A Catering Order',
-    already_on = 'You Already Are On This Catering Order',
+    already_on = 'You Are Already On This Catering Order',
     dontHave = 'You Dont Have All The Correct Items!'
 }
 
