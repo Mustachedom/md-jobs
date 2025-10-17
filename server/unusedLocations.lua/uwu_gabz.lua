@@ -2,7 +2,7 @@ Jobs['uwu'] = {
     CateringEnabled = true,
     closedShopsEnabled = true,
     Blip = {
-        {sprite = 80, color = 2, scale = 0.5, label = 'Cat Cafe', loc = vector3(-584.06, -1058.73, 22.38)},
+        {sprite = 80, color = 2, scale = 0.5, label = 'Cat Cafe', loc = vector3(-584.06, -1058.73, 22.38), category = 17},
     },
     closedShops = {
         {ped = 'mp_m_freemode_01', loc = vector4(-574.73, -1071.35, 22.33, 175.12), label = 'uwu Cafe Shop'}
@@ -170,4 +170,5 @@ Jobs['uwu'] = {
         uwu_kare_curry = {anim = 'eat', label = 'Eating', add = {hunger = 10}},
         uwu_omurice = {anim = 'eat', label = 'Eating', add = {hunger = 10}},
     },
+
 }

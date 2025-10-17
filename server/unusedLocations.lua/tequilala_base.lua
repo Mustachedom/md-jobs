@@ -2,7 +2,7 @@ Jobs['tequilala'] = {
     CateringEnabled = true,
     closedShopsEnabled = true,
     Blip = {
-        {sprite = 93, color = 2, scale = 0.5, label = 'Tequila La', loc =vec3(-554.26, 285.53, 82.18)},
+        {sprite = 93, color = 2, scale = 0.5, label = 'Tequila La', loc =vec3(-554.26, 285.53, 82.18), category = 16},
     },
     closedShops = {
         {ped = 'mp_m_freemode_01', loc = vec4(-559.73, 274.44, 83.02, 183.77), label = 'Tequila La Shop'}
@@ -79,4 +79,5 @@ Jobs['tequilala'] = {
         pisswaser_dark = {anim = 'drink', label = 'Drinking', add = {thirst = 10}},
         pisswaser_light = {anim = 'drink', label = 'Drinking', add = {thirst = 10}},
     },
+
 }

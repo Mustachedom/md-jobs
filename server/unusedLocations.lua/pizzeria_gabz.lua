@@ -2,7 +2,7 @@ Jobs['pizzeria'] = {
     CateringEnabled = true,
     closedShopsEnabled = true,
     Blip = {
-        {sprite = 889, color = 2, scale = 0.5, label = 'pizzeria', loc = vector3(804.71, -748.85, 32.8)},
+        {sprite = 889, color = 2, scale = 0.5, label = 'Pizzeria', loc = vector3(804.71, -748.85, 32.8), category = 15},
     },
     closedShops = {
         {ped = 'mp_m_freemode_01', loc = vec4(793.87, -746.23, 27.19, 86.08), label = 'Pizzeria'}
@@ -142,4 +142,7 @@ Jobs['pizzeria'] = {
         sausage_pizza = {anim = 'eat', label = 'Eating', add = {hunger = 10}},
         veggie_pizza = {anim = 'eat', label = 'Eating', add = {hunger = 10}},
     },
+
 }
+
+

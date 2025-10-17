@@ -2,7 +2,7 @@ Jobs['hornys'] = {
     CateringEnabled = true,
     closedShopsEnabled = true,
     Blip = {
-        {sprite = 80, color = 2, scale = 0.5, label = 'hornys', loc = vector4(1251.36, -353.5, 74.02, 96.8)},
+        {sprite = 80, color = 2, scale = 0.5, label = 'hornys', loc = vector4(1251.36, -353.5, 74.02, 96.8), category = 15},
     },
     closedShops = {
         {ped = 'mp_m_freemode_01', loc = vec4(1239.19, -367.96, 69.21, 217.86), label = 'Horny Little Shop'}
@@ -134,4 +134,6 @@ Jobs['hornys'] = {
         sirloin_burger = {anim = 'eat', label = 'Eating', add = {hunger = 10}},
         wings = {anim = 'eat', label = 'Eating', add = {hunger = 10}},
     },
+
 }
+

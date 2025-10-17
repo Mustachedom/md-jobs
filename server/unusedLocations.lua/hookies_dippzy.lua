@@ -3,7 +3,7 @@ Jobs['hookies'] = {
     CateringEnabled = true,
     closedShopsEnabled = true,
     Blip = {
-        {sprite = 214, color = 2, scale = 0.5, label = 'Hookies', loc = vector3(-2187.99, 4290.71, 49.17)},
+        {sprite = 214, color = 2, scale = 0.5, label = 'Hookies', loc = vector3(-2187.99, 4290.71, 49.17), category = 15},
     },
     closedShops = {
         {ped = 'mp_m_freemode_01', loc = vec4(-2191.51, 4285.47, 49.18, 156.08), label = 'Hookies Shop'}
@@ -153,4 +153,6 @@ Jobs['hookies'] = {
         seafood_lobster_plate = {anim = 'eat', label = 'Eating', add = {hunger = 10}},
         sprunk = {anim = 'drink', label = 'Drinking', add = {thirst = 10}},
     },
+
 }
+

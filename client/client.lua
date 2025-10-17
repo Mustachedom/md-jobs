@@ -161,6 +161,8 @@ end
 --- @return nil
 local function spawnBlips()
     local blipConfigs = lib.callback.await('md-jobs:server:getBlips', false)
+    local registeredCategories = {}
+
     for jobName, blipConfig in pairs(blipConfigs) do
         local blipInfo = blipConfig.info
         if blips[jobName] ~= nil then
@@ -169,13 +171,25 @@ local function spawnBlips()
             end
             blips[jobName] = nil
         end
+
         blips[jobName] = CreateBlip(blipInfo.loc, {
             sprite = blipInfo.sprite or 52,
-            display = 4,
-            scale = blipInfo.scale or 0.8,
-            color = blipInfo.color or 2,
-            label = blipInfo.label or 'Lazy Ass'
+            display = blipInfo.disp or 4,
+            scale  = blipInfo.scale or 0.8,
+            color  = blipInfo.color or 2,
+            label  = blipInfo.label or jobName
         }, true, false)
+
+        if Config.GroupBlips and blipInfo.category then
+            SetBlipCategory(blips[jobName], blipInfo.category)
+
+            if not registeredCategories[blipInfo.category] then
+                local catName = Config.CategoryNames and Config.CategoryNames[blipInfo.category]
+                    or ("Category " .. blipInfo.category)
+                AddTextEntry("BLIP_CAT_" .. blipInfo.category, catName)
+                registeredCategories[blipInfo.category] = true
+            end
+        end
     end
 end
 
@@ -784,3 +798,5 @@ CreateThread(function()
         end
     end
 end)
+
+

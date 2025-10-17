@@ -3,7 +3,7 @@ Jobs['limeys'] = {
     CateringEnabled = true,
     closedShopsEnabled = true,
     Blip = {
-        {sprite = 214, color = 2, scale = 0.5, label = 'Limeys', loc = vector3(253.36, -1019.27, 29.54)},
+        {sprite = 214, color = 2, scale = 0.5, label = 'Limeys', loc = vector3(253.36, -1019.27, 29.54), category = 15},
     },
     closedShops = {
         {ped = 'mp_m_freemode_01', loc = vec4(249.7, -1025.82, 29.25, 120.7), label = 'Limeys Juice Shop'}

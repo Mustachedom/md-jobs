@@ -21,6 +21,13 @@ Config.ClosedShopAlwaysActive = true   -- If you want to always have closed shop
 Config.ClosedShopLoop = 5              -- How many minutes you want to wait for the closed shop loop | Recommended higher than 5
 Config.ClosedShopCount = 2             -- How many players you want to allow to be on duty before closed shops are active
 Config.ClosedShopFee = 0.2             -- 20% of the total price
+Config.GroupBlips = true              -- If blips should group by category on map set to true
+Config.CategoryNames = {
+    [15] = "Food",
+    [16] = "Bar",
+    [17] = "Coffee Shop",
+    [18] = "Weed Shop",
+}
 
 if Config.Framework == 'qb' then
     QBCore = exports['qb-core']:GetCoreObject()

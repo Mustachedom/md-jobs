@@ -6,7 +6,7 @@ Jobs['weedshop'] = {
     CateringEnabled = false,
     closedShopsEnabled = true,
     Blip = {
-        {sprite = 469, color = 2, scale = 0.8, label = 'Weed Shop', loc = vector3(374.57, -825.79, 29.05)},
+        {sprite = 469, color = 2, scale = 0.8, label = 'Weed Shop', loc = vector3(374.57, -825.79, 29.05), category = 18},
     },
     closedShops = {
         {ped = 'mp_m_freemode_01', loc = vector4(-626.02, 287.51, 82.39, 180.0), label = 'Weed Shop'}
@@ -134,3 +134,4 @@ Jobs['weedshop'] = {
         joint_white_widow = {anim = 'smoke', label = 'Smoking', add = {hunger = -3, stress = -10}},
     },
 }
+

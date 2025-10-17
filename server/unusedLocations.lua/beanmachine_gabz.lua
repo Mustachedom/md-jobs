@@ -2,7 +2,7 @@ Jobs['beanmachine'] = {
     CateringEnabled = true,
     closedShopsEnabled = false,
     Blip = {
-        {sprite = 214, color = 2, scale = 0.5, label = 'Bean Machine', loc = vec3(112.27, -1042.8, 29.28)},
+        {sprite = 214, color = 2, scale = 0.5, label = 'Bean Machine', loc = vec3(112.27, -1042.8, 29.28), category = 17},
     },
     closedShops = {
         {ped = 'mp_m_freemode_01', loc = vec4(112.27, -1042.8, 29.28, 62.86), label = 'Bean Machine Shop'}
@@ -119,4 +119,5 @@ Jobs['beanmachine'] = {
         cold_brew = {anim = 'drink', label = 'Drinking', add = {thirst = 10}},
         
     },
+
 }

@@ -4,7 +4,7 @@ Jobs['beanmachine'] = {
     CateringEnabled = true,
     closedShopsEnabled = true,
     Blip = {
-        {sprite = 214, color = 2, scale = 0.5, label = 'Bean Machine', loc = vector4(278.03, -963.77, 29.39, 351.03)},
+        {sprite = 214, color = 2, scale = 0.5, label = 'Bean Machine', loc = vector4(278.03, -963.77, 29.39, 351.03), category = 17},
     },
     closedShops = {
         {ped = 'mp_m_freemode_01', loc = vec4(279.09, -963.87, 29.4, 358.69), label = 'Bean Machine Cafe'}
@@ -114,4 +114,5 @@ Jobs['beanmachine'] = {
         hazelnut_latte = {anim = 'drink', label = 'Drinking', add = {thirst = 10}},
         cold_brew = {anim = 'drink', label = 'Drinking', add = {thirst = 10}},
     },
+
 }

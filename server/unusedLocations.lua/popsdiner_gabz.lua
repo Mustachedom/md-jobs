@@ -2,7 +2,7 @@ Jobs['popsdiner'] = {
     CateringEnabled = true,
     closedShopsEnabled = true,
     Blip = {
-        {sprite = 267, color = 2, scale = 0.5, label = 'Pops Diner', loc = vector3(1591.95, 6447.57, 25.32)},
+        {sprite = 267, color = 2, scale = 0.5, label = 'Pops Diner', loc = vector3(1591.95, 6447.57, 25.32), category = 15},
     },
     closedShops = {
         {ped = 'mp_m_freemode_01', loc = vector4(1591.95, 6447.57, 25.32, 143.8), label = 'Pops Diner Shop'}
@@ -123,4 +123,6 @@ Jobs['popsdiner'] = {
         popsburger = {anim = 'eat', label = 'Eating', add = {hunger = 10}},
         steak_and_potato = {anim = 'eat', label = 'Eating', add = {hunger = 10}},
     },
+
 }
+

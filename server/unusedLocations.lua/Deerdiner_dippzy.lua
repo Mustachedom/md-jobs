@@ -2,7 +2,7 @@ Jobs['deerdiner'] = {
     CateringEnabled = true,
     closedShopsEnabled = true,
     Blip = {
-        {sprite = 469, color = 2, scale = 0.8, label = 'Deer Diner', loc = vector3(454.46, 131.0, 99.4)},
+        {sprite = 469, color = 2, scale = 0.8, label = 'Deer Diner', loc = vector3(454.46, 131.0, 99.4), category = 15},
     },
     closedShops = {
         {ped = 'mp_m_freemode_01', loc = vec4(454.52, 131.05, 99.4, 151.87), label = 'Deer Diner Shop'}
@@ -140,4 +140,6 @@ Jobs['deerdiner'] = {
         coffee = {anim = 'eat', label = 'Eating', add = {hunger = 10}},
         
     },
+
 }
+

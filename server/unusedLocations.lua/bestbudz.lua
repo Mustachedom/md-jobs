@@ -1,10 +1,9 @@
 -- https://www.gta5-mods.com/maps/mlo-legion-weed-clinic
-
 Jobs['bestbudz'] = {
     CateringEnabled = true,
     closedShopsEnabled = true,
     Blip = {
-        {sprite = 469, color = 2, scale = 0.8, label = 'Best Budz', loc = vec3(381.92, -833.4, 29.29)},
+        {sprite = 469, color = 2, scale = 0.8, label = 'Best Budz', loc = vec3(381.92, -833.4, 29.29), category = 18},
     },
     closedShops = {
         {ped = 'mp_m_freemode_01', loc = vec4(381.92, -833.4, 29.29, 184.21), label = 'Best Budz Shop'}
@@ -153,4 +152,5 @@ Jobs['bestbudz'] = {
         joint_white_widow = {anim = 'smoke2', label = 'Smoking', add = {hunger = -3, stress = -10}},
         weed_gummies = {anim = 'eat', label = 'Eating', add = {hunger = 1, stress = -10}},
     },
+
 }

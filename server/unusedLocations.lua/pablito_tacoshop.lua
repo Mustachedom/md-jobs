@@ -2,7 +2,7 @@ Jobs['tacoshop'] = {
     CateringEnabled = true,
     closedShopsEnabled = true,
     Blip = {
-        {sprite = 469, color = 2, scale = 0.8, label = 'Taco Shop', loc = vector3(13.6, -1606.69, 29.4)},
+        {sprite = 469, color = 2, scale = 0.8, label = 'Taco Shop', loc = vector3(13.6, -1606.69, 29.4), category = 15},
     },
     closedShops = {
         {ped = 'mp_m_freemode_01', loc = vector4(13.6, -1606.69, 29.4, 147.99), label = 'Pablito Taco Shop'}
@@ -79,4 +79,6 @@ Jobs['tacoshop'] = {
         ecola = {anim = 'drink', label = 'Drinking', add = {thirst = 10}},
         sprunk = {anim = 'drink', label = 'Drinking', add = {thirst = 10}},
     },
+
 }
+

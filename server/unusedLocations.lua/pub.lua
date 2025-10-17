@@ -4,7 +4,7 @@ Jobs['pub'] = {
     CateringEnabled = true,
     closedShopsEnabled = true,
     Blip = {
-        {sprite = 93, color = 2, scale = 0.5, label = 'pub', loc = vector3(-578.47, -695.18, 32.52)},
+        {sprite = 93, color = 2, scale = 0.5, label = 'pub', loc = vector3(-578.47, -695.18, 32.52), category = 16},
     },
     closedShops = {
         {ped = 'mp_m_freemode_01', loc = vec4(-577.17, -678.2, 32.37, 263.23), label = 'Pub Shop'}
@@ -242,4 +242,5 @@ Jobs['pub'] = {
         vodka_soda = {anim = 'drink', label = 'Drinking', add = {thirst = 10}},
         whiskey_sour = {anim = 'eat', label = 'Eating', add = {hunger = 10}},
     },
+
 }

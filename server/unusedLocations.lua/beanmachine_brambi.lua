@@ -4,7 +4,7 @@ Jobs['beanmachine'] = {
     CateringEnabled = true,
     closedShopsEnabled = true,
     Blip = {
-        {sprite = 214, color = 2, scale = 0.5, label = 'Bean Machine', loc = vector4(336.74, -778.19, 29.26, 74.91)},
+        {sprite = 214, color = 2, scale = 0.5, label = 'Bean Machine', loc = vector4(336.74, -778.19, 29.26, 74.91), category = 17},
     },
     closedShops = {
         {ped = 'A_F_Y_Bevhills_05', loc = vector4(336.74, -778.19, 28.26, 74.91), label = 'Bean Machine Shop Two'}
@@ -103,4 +103,5 @@ Jobs['beanmachine'] = {
         tiramasu_coffee     = {anim = 'drink',  label = 'Drinking', add = {thirst = 10}},
         vanilla_frappe      = {anim = 'drink',  label = 'Drinking', add = {thirst = 10}},
     },
+
 }
